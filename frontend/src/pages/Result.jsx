@@ -73,8 +73,11 @@ export default function Result() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('overview');
   const [loadSource, setLoadSource] = useState('');
+  const [loadingStep, setLoadingStep] = useState(0);
+  // 0=checking stored, 1=running ML, 2=generating AI feedback, 3=building report
 
   useEffect(() => {
+    setLoadingStep(0);
     // Try to load stored results first (GET), only POST if no stored result
     api.getResult(studentId)
       .then(d => {
@@ -88,6 +91,9 @@ export default function Result() {
       })
       .catch(() => {
         // No stored result — run prediction
+        setLoadingStep(1);
+        setTimeout(() => setLoadingStep(2), 4000);  // ML takes ~3-5s
+        setTimeout(() => setLoadingStep(3), 10000); // Gemini takes ~8-15s
         api.predict(studentId)
           .then(d => { setData(d); setLoadSource('fresh'); setLoading(false); })
           .catch(err => {
@@ -108,12 +114,50 @@ export default function Result() {
       });
   }, [studentId]);
 
+  const loadingSteps = [
+    { label: 'Checking saved results', icon: '🔍' },
+    { label: 'Running ML prediction model', icon: '🤖' },
+    { label: 'Generating AI feedback with Gemini', icon: '✨' },
+    { label: 'Building your report', icon: '📊' },
+  ];
+
   if (loading) return (
     <div className="page-center">
-      <div style={{ textAlign: 'center' }} className="anim-in">
-        <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-        <h2 style={{ fontWeight: 600 }}>Generating Results</h2>
-        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>AI is analyzing your performance...</p>
+      <div style={{ textAlign: 'center', maxWidth: '380px', width: '100%' }} className="anim-in">
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🎓</div>
+        <h2 style={{ fontWeight: 700, fontSize: '1.25rem', marginBottom: '0.25rem' }}>Analyzing Your Performance</h2>
+        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '2rem' }}>This may take up to 30 seconds — please don't close the page</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left' }}>
+          {loadingSteps.map((step, i) => {
+            const done = i < loadingStep;
+            const active = i === loadingStep;
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.75rem 1rem', borderRadius: '0.625rem',
+                background: done ? '#f0fdf4' : active ? '#eff6ff' : 'var(--card)',
+                border: `1px solid ${done ? '#bbf7d0' : active ? '#bfdbfe' : 'var(--border)'}`,
+                transition: 'all 0.4s ease',
+                opacity: i > loadingStep ? 0.4 : 1,
+              }}>
+                <div style={{ width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {done ? (
+                    <span style={{ fontSize: '1.1rem' }}>✅</span>
+                  ) : active ? (
+                    <div className="spinner" style={{ width: '1.25rem', height: '1.25rem', borderWidth: '2px' }} />
+                  ) : (
+                    <span style={{ fontSize: '1rem', opacity: 0.5 }}>{step.icon}</span>
+                  )}
+                </div>
+                <span style={{
+                  fontSize: '0.875rem', fontWeight: active ? 600 : 500,
+                  color: done ? '#15803d' : active ? '#1d4ed8' : '#9ca3af'
+                }}>{step.label}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
