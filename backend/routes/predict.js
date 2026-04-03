@@ -160,30 +160,36 @@ CRITICAL: Return ONLY valid JSON. No text before or after. No markdown. No expla
     }
   }
 
-  // Try: Gemini 2.5 Flash
+  // Try: Gemini
+  console.log(`[Feedback] API key present: ${!!process.env.GEMINI_API_KEY}, model: gemini-3-flash-preview`);
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
+        console.log(`[Feedback] Attempt ${attempt + 1}/3 — calling Gemini...`);
         if (attempt > 0) await new Promise(r => setTimeout(r, 4000 * attempt));
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim().replace(/```json|```/g, '');
-        console.log('[Feedback] ✓ Generated via Gemini 2.5 Flash');
+        console.log(`[Feedback] ✓ Raw response length: ${text.length} chars`);
+        console.log(`[Feedback] Response preview: ${text.substring(0, 200)}`);
         const parsed = repairJSON(text);
         if (parsed) return parsed;
         return JSON.parse(text);
       } catch (err) {
+        console.log(`[Feedback] Attempt ${attempt + 1} failed: ${err.message}`);
+        console.log(`[Feedback] Error status: ${err.status}, code: ${err.code}`);
         if (attempt < 2 && (err.status === 429 || err.message?.includes('429'))) continue;
         throw err;
       }
     }
   } catch (e) {
-    console.log(`[Feedback] Gemini unavailable: ${e.message?.substring(0, 60)}`);
+    console.log(`[Feedback] ❌ Gemini FAILED — ${e.message}`);
+    console.log(`[Feedback] Full error:`, e);
   }
 
   // Fallback: return null — predict.js will handle
-  console.log('[Feedback] Gemini 2.5 Flash unavailable');
+  console.log('[Feedback] Returning null — no AI feedback generated');
   return null;
 }
 
