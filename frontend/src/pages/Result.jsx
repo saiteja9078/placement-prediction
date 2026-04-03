@@ -134,7 +134,6 @@ export default function Result() {
   const tabs = [
     ['overview', 'Overview'],
     ['skillgap', 'Skill Gap'],
-    ['career', 'Career Guidance'],
     ['feedback', 'AI Feedback'],
     ['plan', '30-Day Plan']
   ];
