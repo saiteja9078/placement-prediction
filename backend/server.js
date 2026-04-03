@@ -5,11 +5,21 @@ const cors = require('cors');
 
 const app = express();
 
-// Middleware
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174']
-  : ['http://localhost:5173', 'http://localhost:5174'];
-app.use(cors({ origin: allowedOrigins }));
+// Middleware — allow localhost, any Vercel deployment, and any Render service
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    const allowed =
+      origin.includes('localhost') ||
+      origin.includes('vercel.app') ||
+      origin.includes('onrender.com') ||
+      origin === process.env.FRONTEND_URL;
+    if (allowed) return callback(null, true);
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
