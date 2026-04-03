@@ -255,6 +255,12 @@ router.get('/:studentId', async (req, res) => {
       return res.status(404).json({ error: 'No prediction found for this student', needsPrediction: true });
     }
 
+    // If prediction exists but AI feedback is missing, force re-run
+    if (student.geminiFeedbackParsed == null) {
+      return res.status(404).json({ error: 'AI feedback missing, re-running prediction', needsPrediction: true });
+    }
+
+
     const prediction = {
       probability: student.mlProbability,
       prediction: student.mlPrediction,
