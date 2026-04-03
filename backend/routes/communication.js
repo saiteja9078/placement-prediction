@@ -6,7 +6,7 @@ const { mapSoftSkillsRating } = require('../utils/scoreMapper');
 
 // ──────────────── Configuration ────────────────
 // Priority: Gemini 2.5 Flash → Smart Local
-const GEMINI_MODEL = 'gemini-2.5-flash-preview-04-17';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 function isEmptyOrInvalid(transcript) {
   if (!transcript) return true;

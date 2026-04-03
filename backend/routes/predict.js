@@ -163,7 +163,7 @@ CRITICAL: Return ONLY valid JSON. No text before or after. No markdown. No expla
   // Try: Gemini 2.5 Flash
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         if (attempt > 0) await new Promise(r => setTimeout(r, 4000 * attempt));
