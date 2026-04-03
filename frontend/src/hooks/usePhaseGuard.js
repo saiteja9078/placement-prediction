@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const PHASE_ROUTES = {
   1: '/register',
@@ -15,8 +16,7 @@ export function usePhaseGuard(studentId, requiredPhase) {
 
   useEffect(() => {
     if (!studentId) { navigate('/'); return; }
-    fetch(`/api/students/${studentId}/phase`)
-      .then(r => r.json())
+    api.getPhase(studentId)
       .then(({ currentPhase }) => {
         setPhaseInfo({ currentPhase, loading: false, isCompleted: currentPhase > requiredPhase });
 
