@@ -164,7 +164,7 @@ CRITICAL: Return ONLY valid JSON. No text before or after. No markdown. No expla
   console.log(`[Feedback] API key present: ${!!process.env.GEMINI_API_KEY}, model: gemini-3-flash-preview`);
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         console.log(`[Feedback] Attempt ${attempt + 1}/3 — calling Gemini...`);
@@ -380,7 +380,7 @@ router.post('/:studentId', async (req, res) => {
     mlResult.codingFactor = parseFloat(codingFactor.toFixed(4));
     mlResult.weightingFormula = '0.80 × ML + 0.20 × CodingScore';
 
-    // Generate AI feedback (Gemini 2.5 Flash → null)
+    // Generate AI feedback
     let geminiFeedback = null;
     let geminiFeedbackRaw = null;
     try {
@@ -388,6 +388,20 @@ router.post('/:studentId', async (req, res) => {
     } catch (geminiErr) {
       console.error('Feedback error:', geminiErr);
       geminiFeedbackRaw = geminiErr.message || 'Feedback generation failed';
+    }
+
+    // If Gemini failed, save a minimal fallback so the cache doesn't loop
+    if (!geminiFeedback) {
+      geminiFeedback = {
+        overallSummary: `Based on your performance, you are predicted as ${mlResult.prediction}. AI detailed feedback is temporarily unavailable — please check back later.`,
+        strengths: [],
+        areasOfImprovement: [],
+        skillGapAnalysis: [],
+        blindSpots: [],
+        riskFactors: [],
+        thirtyDayPlan: []
+      };
+      console.log('[Predict] Saved fallback feedback to prevent retry loop');
     }
 
     // Save ALL results to DB for persistence
